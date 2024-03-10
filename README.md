@@ -1,4 +1,4 @@
-# CommandCalendr
+# CommandCalender
 
 A project intended to create a program which:
 
