@@ -10,13 +10,13 @@ A project intended to create a program which:
 ## TO DO
 
 - [x] Add commandline menu loop
-- [ ] Create basic event storage format
-- [ ] Add pattern recognition for command-line input, for creating events (use lexing concepts?)
-- [ ] Add menu options for displaying stored schedule
+- [x] Create basic event storage format
+- [x] Add pattern recognition for command-line input, for creating events (regex)
+- [ ] Make menu option for displaying stored schedule work
 - [ ] Adjust event format to match google calendar's events
 - [ ] Add timezone detection and settings
-- [ ] Add exporting events via google calendar's API
-- [ ] Adjust readME and menu to explain api export functionality
+- [ ] Add exporting events via Google calendar's API
+- [ ] Adjust README and menu to explain api export functionality
 
 ## Extensions/Idea Dump
 
