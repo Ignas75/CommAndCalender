@@ -1,30 +1,18 @@
 import unittest
 from events import *
 from datetime import datetime, timedelta
-from enum import Enum
-
-
-class EventDuration(Enum):
-    HOUR = 60
-    MINUTE = 1
-    DAY = 1440
 
 
 sampleInputs = ["Thursday 12:00 E1", "Friday 1pm E2", "2pm Monday E3", "3pm Monday E4 1 hour", "4pm Monday E5 1hour",
                 "E6 5pm Monday 60 minutes", "Wed 75mins 9pm E7", "21/12 D1", "Tuesday D2", "22/12/2024 D3"]
-
-# can't include the 3 letter versions because sat and sun could be used in the title, and we wouldn't want to match
-# on that
-days = ["monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday"]
 
 
 class MyTestCase(unittest.TestCase):
 
     def valid_time_test(self, time):
         match = find_time(time)
-        if match is None:
-            self.assertIsNotNone(match)
-        self.assertEqual(time, match.group())
+        self.assertFalse("Error" in match)
+        self.assertEqual(time, match["Match"])
 
     # TODO: fix
     def test_accepted_valid_events(self):
@@ -101,8 +89,7 @@ class MyTestCase(unittest.TestCase):
                 accepted_values.append(day)
         self.assertTrue(len(rejected_values) == 0)
 
-    def event_acceptation(self, name, time_string, date, hour, minutes=0, duration=""):
-        event_string = name + " " + time_string + " " + date + " " + duration
+    def event_acceptation_test_template(self, event_string, name, date, hour, minutes, duration):
         event = process_event(event_string)
         self.assertIsNotNone(event)
 
@@ -120,7 +107,13 @@ class MyTestCase(unittest.TestCase):
         self.assertEqual(name, event["name"])
         self.assertEqual(duration, event["duration"])
 
+    def event_acceptation_date(self, name, time_string, date, hour, minutes=0, duration=""):
+        event_string = name + " " + time_string + " " + date + " " + duration
+        self.event_acceptation_test_template(event_string, name, date, hour, minutes, duration)
+
     def event_acceptation_day(self, name, time_string, day, hour, minutes=0, duration=""):
+        event_string = name + " " + time_string + " " + day + " " + duration
+
         current_date = datetime.now()
         current_weekday = current_date.weekday()
         current_hour = current_date.hour
@@ -133,7 +126,7 @@ class MyTestCase(unittest.TestCase):
 
         expected_date = (current_date + timedelta(days=days_to_add)).date()
         date_string = expected_date.strftime("%d/%m/%y")
-        self.event_acceptation(name, time_string, date_string, hour, minutes, duration)
+        self.event_acceptation_test_template(name, event_string, date_string, hour, minutes, duration)
 
     def test_accepts_event(self):
         name = "Bowling"
