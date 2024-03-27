@@ -95,24 +95,27 @@ class MyTestCase(unittest.TestCase):
 
         # Setting empty duration after processing the event, for testing. To see if the default duration is correctly
         # applied
-        if duration.strip() == "":
-            duration = default_duration
+        if duration is None:
+            duration = default_duration_minutes
         event_date = event["date_and_time"].date()
         event_date_string = event_date.strftime("%d/%m/%y")
         event_hour = event["date_and_time"].hour
         event_minutes = event["date_and_time"].minute
+        event_end_time = event_date + timedelta(minutes=duration)
         self.assertEqual(date, event_date_string)
         self.assertEqual(hour, event_hour)
         self.assertEqual(minutes, event_minutes)
         self.assertEqual(name, event["name"])
         self.assertEqual(duration, event["duration"])
 
-    def event_acceptation_date(self, name, time_string, date, hour, minutes=0, duration=""):
+    def event_acceptation_test_date(self, name, time_string, date, hour, minutes=0, duration=None):
         event_string = name + " " + time_string + " " + date + " " + duration
         self.event_acceptation_test_template(event_string, name, date, hour, minutes, duration)
 
-    def event_acceptation_day(self, name, time_string, day, hour, minutes=0, duration=""):
-        event_string = name + " " + time_string + " " + day + " " + duration
+    def event_acceptation_test_day(self, name, time_string, day, hour, minutes=40, duration=None):
+        event_string = name + " " + time_string + " " + day
+        if duration is not None:
+            event_string = event_string + " " + duration
 
         current_date = datetime.now()
         current_weekday = current_date.weekday()
@@ -126,14 +129,14 @@ class MyTestCase(unittest.TestCase):
 
         expected_date = (current_date + timedelta(days=days_to_add)).date()
         date_string = expected_date.strftime("%d/%m/%y")
-        self.event_acceptation_test_template(name, event_string, date_string, hour, minutes, duration)
+        self.event_acceptation_test_template(event_string, name, date_string, hour, minutes, duration)
 
     def test_accepts_event(self):
         name = "Bowling"
         time = "5pm"
         date = "Monday"
         hour = 17
-        self.event_acceptation_day(name, time, date, hour)
+        self.event_acceptation_test_day(name, time, date, hour)
 
     def test_missing_event_name(self):
         self.assertEqual(process_event("Saturday 12pm"), "Missing Event Name")
