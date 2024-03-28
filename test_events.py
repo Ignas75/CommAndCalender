@@ -89,33 +89,54 @@ class MyTestCase(unittest.TestCase):
                 accepted_values.append(day)
         self.assertTrue(len(rejected_values) == 0)
 
-    def event_acceptation_test_template(self, event_string, name, date, hour, minutes, duration):
+    def event_acceptation_test_template(self, event_string, name, date_string, hour, minutes, duration_minutes):
+        """
+
+        :type duration: int
+        representing the number of minutes it will last
+        """
         event = process_event(event_string)
         self.assertIsNotNone(event)
 
         # Setting empty duration after processing the event, for testing. To see if the default duration is correctly
         # applied
-        if duration is None:
-            duration = default_duration_minutes
-        event_date = event["date_and_time"].date()
+        duration = default_duration_minutes
+        if duration_minutes is not None:
+            duration = duration_minutes
+        event_date = event["Start DateTime"].date()
         event_date_string = event_date.strftime("%d/%m/%y")
-        event_hour = event["date_and_time"].hour
-        event_minutes = event["date_and_time"].minute
-        event_end_time = event_date + timedelta(minutes=duration)
-        self.assertEqual(date, event_date_string)
+        event_hour = event["Start DateTime"].hour
+        event_minutes = event["Start DateTime"].minute
+        # Bit lazy but, if the start date assertions pass, then it should be "safe" to base the expected end date on
+        # the addition of the duration in minutes to the returned event datetime
+        expected_end_date = event["Start DateTime"] + timedelta(minutes=duration)
+
+        self.assertEqual(date_string, event_date_string)
         self.assertEqual(hour, event_hour)
         self.assertEqual(minutes, event_minutes)
-        self.assertEqual(name, event["name"])
-        self.assertEqual(duration, event["duration"])
+        self.assertEqual(name, event["Name"])
+        self.assertEqual(expected_end_date, event["End DateTime"])
 
-    def event_acceptation_test_date(self, name, time_string, date, hour, minutes=0, duration=None):
-        event_string = name + " " + time_string + " " + date + " " + duration
-        self.event_acceptation_test_template(event_string, name, date, hour, minutes, duration)
-
-    def event_acceptation_test_day(self, name, time_string, day, hour, minutes=40, duration=None):
-        event_string = name + " " + time_string + " " + day
+    def event_acceptation_test_date(self, name, time_string, date, hour, minutes=0, duration=None, duration_units=None):
+        event_string = name + " " + time_string + " " + date
+        duration_minutes = None
         if duration is not None:
-            event_string = event_string + " " + duration
+            event_string = event_string + " " + duration + " " + duration_units
+            if duration_units.lower() in ["min", "mins", "minute", "minutes"]:
+                duration_minutes = duration
+            elif duration_units.lower() in ["hour", "hours", "hr", "hrs"]:
+                duration_minutes = duration * 60
+            elif duration_units.lower() in ["day", "days"]:
+                duration_minutes = duration * 1440
+            else:
+                print("Missing/Invalid duration units")
+        self.event_acceptation_test_template(event_string, name, date, hour, minutes, duration_minutes)
+
+    def event_acceptation_test_day(self, name, time_string, day, hour, minutes=0, duration=None, duration_units=None):
+        event_string = name + " " + time_string + " " + day
+        duration_minutes = None
+        if duration is not None:
+            event_string = event_string + " " + duration + " " + duration_units
 
         current_date = datetime.now()
         current_weekday = current_date.weekday()
@@ -129,7 +150,7 @@ class MyTestCase(unittest.TestCase):
 
         expected_date = (current_date + timedelta(days=days_to_add)).date()
         date_string = expected_date.strftime("%d/%m/%y")
-        self.event_acceptation_test_template(event_string, name, date_string, hour, minutes, duration)
+        self.event_acceptation_test_template(event_string, name, date_string, hour, minutes, duration_minutes)
 
     def test_accepts_event(self):
         name = "Bowling"

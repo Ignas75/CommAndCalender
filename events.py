@@ -23,8 +23,11 @@ def store_event(start_dt, end_dt, name):
 
 
 def find_duration(user_input):
-    pattern = r"[1-6]?[0-9] (min|mins|minutes|hours?|day)"
-    return re.search(pattern, user_input)
+    pattern = r"[1-6]?[0-9]/s*(mins?|minutes?|hours?|day)"
+    match = re.search(pattern, user_input)
+    if match is None:
+        return None
+    return match.group()
 
 
 def find_day(user_input):
@@ -117,8 +120,8 @@ def remove_substring(string, remove):
 
 
 def process_event(user_input):
-    event_date = None
-    event_end = None
+    event_datetime = None
+    event_end_datetime = None
     event_name = ""
 
     time_found = find_time(user_input)
@@ -156,39 +159,31 @@ def process_event(user_input):
             else:
                 days_offset = (day_int - current_weekday_int) % 7
             current_date = datetime.now()
-            event_date = current_date + timedelta(days=days_offset)
-            event_day = event_date.day
-            event_month = event_date.month
-            event_year = event_date.year
+            event_datetime = current_date + timedelta(days=days_offset)
+            event_day = event_datetime.day
+            event_month = event_datetime.month
+            event_year = event_datetime.year
 
-            match day["Format"]:
-                case "short year":
-                    print("TEMP")
         case DateFormat.LONG_YEAR:
             date_components = day["Date"].split("/")
-            event_day = date_components[0]
-            event_month = date_components[1]
-            event_year = date_components[2]
+            event_day = int(date_components[0])
+            event_month = int(date_components[1])
+            event_year = int(date_components[2])
+
         case DateFormat.SHORT_YEAR:
             date_components = day["Date"].split("/")
-            event_day = date_components[0]
-            event_month = date_components[1]
-            event_year = 2000 + date_components[2]
+            event_day = int(date_components[0])
+            event_month = int(date_components[1])
+            event_year = int("20" + date_components[2])
+
         case DateFormat.DAY_MONTH:
             date_components = day["Date"].split("/")
-            event_day = date_components[0]
-            event_month = date_components[1]
+            event_day = int(date_components[0])
+            event_month = int(date_components[1])
 
-    event_date = datetime(year=event_year, month=event_month, day=event_day, hour=hours, minute=minutes)
-    event_end = event_date + timedelta(minutes=default_duration_minutes)
+    event_datetime = datetime(year=event_year, month=event_month, day=event_day, hour=hours, minute=minutes)
+    if event_duration is None:
+        event_duration = default_duration_minutes
+    event_end_datetime = event_datetime + timedelta(minutes=event_duration)
 
-    print(day)
-    print(processed_time)
-    duration = find_duration(user_input)
-    if duration is None:
-        duration = 60
-
-    if user_input is not None:
-        event = {"date_and_time": datetime.now(), "name": "Bowling", "duration": default_duration_minutes}
-        return event
-    return None
+    return {"Start DateTime": event_datetime, "End DateTime": event_end_datetime, "Name": event_name}
