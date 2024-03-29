@@ -186,14 +186,14 @@ class MyTestCase(unittest.TestCase):
         time = "12pm"
         date = "Friday"
         hour = 12
-        self.event_acceptation_test_day(name, time, date, hour)
+        self.event_acceptation_test_day(name, date, time, hour)
 
     def test_accepts_am_time_with_minutes(self):
         name = "Dreaded Alarm"
         time = "6:30 am"
         date = "Saturday"
         hour = 6
-        self.event_acceptation_test_day(name, time, date, hour, 30)
+        self.event_acceptation_test_day(name, date, time, hour, 30)
 
     # TODO: write tests for failing on: too many days in month, too many hours, too many minutes
     # as well as for: no date, no name
