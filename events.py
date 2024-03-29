@@ -116,7 +116,7 @@ def remove_substring(string, remove):
 
 
 # used for figuring out a valid date based on given time parameters
-def date_construction(day, month, hour=0, minute=0):
+def date_construction(month, day, hour=0, minute=0):
     current_datetime = datetime.now()
     current_date = current_datetime.date()
     year = current_date.year

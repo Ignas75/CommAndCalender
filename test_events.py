@@ -93,8 +93,8 @@ class MyTestCase(unittest.TestCase):
                 accepted_values.append(day)
         self.assertTrue(len(rejected_values) == 0)
 
-    def event_acceptation_test_template(self, name, date_string, time_string, hour, minutes=0,
-                                        duration=None, duration_units=None):
+    def event_acceptation_test(self, name, date_string, time_string, hour, minutes=0,
+                               duration=None, duration_units=None):
         duration_string = ""
         duration_minutes = ""
         if duration is not None:
@@ -137,7 +137,7 @@ class MyTestCase(unittest.TestCase):
         self.assertEqual(name, event["Name"])
         self.assertEqual(expected_end_date, event["End DateTime"])
 
-    def event_acceptation_test_day(self, name, time_string, day, hour, minutes=0, duration=None, duration_units=None):
+    def event_acceptation_test_day(self, name, day, time_string, hour, minutes=0, duration=None, duration_units=None):
 
         current_date = datetime.now()
         current_weekday = current_date.weekday()
@@ -151,35 +151,35 @@ class MyTestCase(unittest.TestCase):
 
         expected_date = (current_date + timedelta(days=days_to_add)).date()
         date_string = expected_date.strftime("%d/%m/%y")
-        self.event_acceptation_test_template(name, date_string, time_string, hour, minutes, duration, duration_units)
+        self.event_acceptation_test(name, date_string, time_string, hour, minutes, duration, duration_units)
 
     def test_accepts_event(self):
         name = "Bowling"
         time = "5pm"
         date = "Monday"
         hour = 17
-        self.event_acceptation_test_day(name, time, date, hour)
+        self.event_acceptation_test_day(name, date, time, hour)
 
     def test_accepts_am_event(self):
         name = "Programming 101"
         time = "9am"
         date = "Tuesday"
         hour = 9
-        self.event_acceptation_test_day(name, time, date, hour)
+        self.event_acceptation_test_day(name, date, time, hour)
 
     def test_accepts_24_hour_format_event(self):
         name = "Lexing"
         time = "13:00"
         date = "Wednesday"
         hour = 13
-        self.event_acceptation_test_day(name, time, date, hour)
+        self.event_acceptation_test_day(name, date, time,hour)
 
     def test_accepts_12am_event(self):
         name = "Rocket League with the boys"
         time = "12am"
         date = "Friday"
         hour = 0
-        self.event_acceptation_test_day(name, time, date, hour)
+        self.event_acceptation_test_day(name, date, time,  hour)
 
     def test_accepts_12pm_event(self):
         name = "Lunch"
