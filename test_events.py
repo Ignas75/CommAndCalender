@@ -1,10 +1,15 @@
 import unittest
 from events import *
 from datetime import datetime, timedelta
-
+import random
 
 sampleInputs = ["Thursday 12:00 E1", "Friday 1pm E2", "2pm Monday E3", "3pm Monday E4 1 hour", "4pm Monday E5 1hour",
                 "E6 5pm Monday 60 minutes", "Wed 75mins 9pm E7", "21/12 D1", "Tuesday D2", "22/12/2024 D3"]
+
+
+def string_shuffle_and_join(event_values):
+    random.shuffle(event_values)
+    return " ".join(event_values)
 
 
 class MyTestCase(unittest.TestCase):
@@ -14,7 +19,6 @@ class MyTestCase(unittest.TestCase):
         self.assertFalse("Error" in match)
         self.assertEqual(time, match["Match"])
 
-    # TODO: fix
     def test_accepted_valid_events(self):
         event_rejected = False
         successful_values = []
@@ -89,20 +93,36 @@ class MyTestCase(unittest.TestCase):
                 accepted_values.append(day)
         self.assertTrue(len(rejected_values) == 0)
 
-    def event_acceptation_test_template(self, event_string, name, date_string, hour, minutes, duration_minutes):
-        """
+    def event_acceptation_test_template(self, name, date_string, time_string, hour, minutes=0,
+                                        duration=None, duration_units=None):
+        duration_string = ""
+        duration_minutes = ""
+        if duration is not None:
+            duration_string = str(duration) + " " + duration_units
+            if duration_units.lower() in ["min", "mins", "minute", "minutes"]:
+                duration_minutes = duration
+            elif duration_units.lower() in ["hour", "hours", "hr", "hrs"]:
+                duration_minutes = duration * 60
+            elif duration_units.lower() in ["day", "days"]:
+                duration_minutes = duration * 1440
+            else:
+                print("Missing/Invalid duration units passed to test function")
+                duration_string = ""
 
-        :type duration: int
-        representing the number of minutes it will last
-        """
+        event_string_values = [name, date_string, time_string, duration_string]
+
+        event_string = string_shuffle_and_join(event_string_values)
+
         event = process_event(event_string)
         self.assertIsNotNone(event)
 
-        # Setting empty duration after processing the event, for testing. To see if the default duration is correctly
-        # applied
-        duration = default_duration_minutes
-        if duration_minutes is not None:
+        # if duration is unspecified, we test to see if it applies the default event duration correctly
+        if duration is None:
+            duration = default_duration_minutes
+        else:
+            # Setting duration after event processing to be in minutes
             duration = duration_minutes
+
         event_date = event["Start DateTime"].date()
         event_date_string = event_date.strftime("%d/%m/%y")
         event_hour = event["Start DateTime"].hour
@@ -117,26 +137,7 @@ class MyTestCase(unittest.TestCase):
         self.assertEqual(name, event["Name"])
         self.assertEqual(expected_end_date, event["End DateTime"])
 
-    def event_acceptation_test_date(self, name, time_string, date, hour, minutes=0, duration=None, duration_units=None):
-        event_string = name + " " + time_string + " " + date
-        duration_minutes = None
-        if duration is not None:
-            event_string = event_string + " " + duration + " " + duration_units
-            if duration_units.lower() in ["min", "mins", "minute", "minutes"]:
-                duration_minutes = duration
-            elif duration_units.lower() in ["hour", "hours", "hr", "hrs"]:
-                duration_minutes = duration * 60
-            elif duration_units.lower() in ["day", "days"]:
-                duration_minutes = duration * 1440
-            else:
-                print("Missing/Invalid duration units")
-        self.event_acceptation_test_template(event_string, name, date, hour, minutes, duration_minutes)
-
     def event_acceptation_test_day(self, name, time_string, day, hour, minutes=0, duration=None, duration_units=None):
-        event_string = name + " " + time_string + " " + day
-        duration_minutes = None
-        if duration is not None:
-            event_string = event_string + " " + duration + " " + duration_units
 
         current_date = datetime.now()
         current_weekday = current_date.weekday()
@@ -150,7 +151,7 @@ class MyTestCase(unittest.TestCase):
 
         expected_date = (current_date + timedelta(days=days_to_add)).date()
         date_string = expected_date.strftime("%d/%m/%y")
-        self.event_acceptation_test_template(event_string, name, date_string, hour, minutes, duration_minutes)
+        self.event_acceptation_test_template(name, date_string, time_string, hour, minutes, duration, duration_units)
 
     def test_accepts_event(self):
         name = "Bowling"
@@ -158,6 +159,44 @@ class MyTestCase(unittest.TestCase):
         date = "Monday"
         hour = 17
         self.event_acceptation_test_day(name, time, date, hour)
+
+    def test_accepts_am_event(self):
+        name = "Programming 101"
+        time = "9am"
+        date = "Tuesday"
+        hour = 9
+        self.event_acceptation_test_day(name, time, date, hour)
+
+    def test_accepts_24_hour_format_event(self):
+        name = "Lexing"
+        time = "13:00"
+        date = "Wednesday"
+        hour = 13
+        self.event_acceptation_test_day(name, time, date, hour)
+
+    def test_accepts_12am_event(self):
+        name = "Rocket League with the boys"
+        time = "12am"
+        date = "Friday"
+        hour = 0
+        self.event_acceptation_test_day(name, time, date, hour)
+
+    def test_accepts_12pm_event(self):
+        name = "Lunch"
+        time = "12pm"
+        date = "Friday"
+        hour = 12
+        self.event_acceptation_test_day(name, time, date, hour)
+
+    def test_accepts_am_time_with_minutes(self):
+        name = "Dreaded Alarm"
+        time = "6:30 am"
+        date = "Saturday"
+        hour = 6
+        self.event_acceptation_test_day(name, time, date, hour, 30)
+
+    # TODO: write tests for failing on: too many days in month, too many hours, too many minutes
+    # as well as for: no date, no name
 
     def test_missing_event_name(self):
         self.assertEqual(process_event("Saturday 12pm"), "Missing Event Name")

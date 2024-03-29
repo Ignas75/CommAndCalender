@@ -87,19 +87,15 @@ def process_time(time):
         time = time.replace("pm", "")
 
     if ":" in time:
-        time_components = time.split(":")
+        time_components = (time.strip()).split(":")
         hour_component = time_components[0]
         if am_time and hour_component == 12:
             hours = 0
-        elif not (hour_component == 12 and pm_time):
+        elif pm_time and not hour_component == 12:
             hours += int(time_components[0])
-            if hours == 24:
-                hours = 0
-
+        else:
+            hours = int(hour_component)
         minutes = int(time_components[1])
-    else:
-        # adding in case it's pm time
-        hours = hours + int(time)
 
     if am_time and hours > 11:
         return {"Error": "Are you sure? am time prefix only goes up to 12"}
@@ -119,11 +115,26 @@ def remove_substring(string, remove):
     return string.replace(remove, "").strip()
 
 
+# used for figuring out a valid date based on given time parameters
+def date_construction(day, month, hour=0, minute=0):
+    current_datetime = datetime.now()
+    current_date = current_datetime.date()
+    year = current_date.year
+    if month < current_date.month:
+        year = year + 1
+    elif month == current_date.month:
+        if day < current_date.day:
+            year = year + 1
+        elif day == current_date.day:
+            if hour < current_datetime.hour:
+                year += 1
+            elif hour == current_datetime.hour and minute <= current_datetime.minute:
+                year += 1
+    return datetime(year=year, month=month, day=day, hour=hour, minute=minute)
+
+
 def process_event(user_input):
     event_datetime = None
-    event_end_datetime = None
-    event_name = ""
-
     time_found = find_time(user_input)
     if "Error" in time_found:
         return time_found["Error"]
@@ -143,7 +154,8 @@ def process_event(user_input):
     else:
         substring_length = len(day["Day"])
         index_of_substring = day["Substring Index"]
-        user_input = user_input[0: index_of_substring] + user_input[index_of_substring + substring_length: len(user_input)]
+        user_input = (user_input[0: index_of_substring] +
+                      user_input[(index_of_substring + substring_length): len(user_input)])
     event_duration = find_duration(user_input)
 
     event_name = user_input.strip()
@@ -159,10 +171,10 @@ def process_event(user_input):
             else:
                 days_offset = (day_int - current_weekday_int) % 7
             current_date = datetime.now()
-            event_datetime = current_date + timedelta(days=days_offset)
-            event_day = event_datetime.day
-            event_month = event_datetime.month
-            event_year = event_datetime.year
+            datetime_of_event = current_date + timedelta(days=days_offset)
+            event_day = datetime_of_event.day
+            event_month = datetime_of_event.month
+            event_year = datetime_of_event.year
 
         case DateFormat.LONG_YEAR:
             date_components = day["Date"].split("/")
@@ -181,7 +193,8 @@ def process_event(user_input):
             event_day = int(date_components[0])
             event_month = int(date_components[1])
 
-    event_datetime = datetime(year=event_year, month=event_month, day=event_day, hour=hours, minute=minutes)
+    if event_datetime is None:
+        event_datetime = datetime(year=event_year, month=event_month, day=event_day, hour=hours, minute=minutes)
     if event_duration is None:
         event_duration = default_duration_minutes
     event_end_datetime = event_datetime + timedelta(minutes=event_duration)
