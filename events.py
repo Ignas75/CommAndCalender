@@ -23,11 +23,39 @@ def store_event(start_dt, end_dt, name):
 
 
 def find_duration(user_input):
-    pattern = r"[1-6]?[0-9]/s*(mins?|minutes?|hours?|day)"
+    pattern = r"[1-6]?[0-9]\s*(mins?|minutes?|hours?|days?)"
     match = re.search(pattern, user_input)
     if match is None:
         return None
     return match.group()
+
+
+def process_duration(duration_string):
+    minute_multiplier = 0
+    unit_string = ""
+
+    for spelling in ["minutes", "mins", "min", "minute"]:
+        if spelling in duration_string:
+            minute_multiplier = 1
+            unit_string = spelling
+            break
+
+    if unit_string == "":
+        for spelling in ["hours", "hrs", "hour"]:
+            if spelling in duration_string:
+                minute_multiplier = 60
+                unit_string = spelling
+                break
+
+    if unit_string == "":
+        for spelling in ["day", "days"]:
+            if spelling in duration_string:
+                minute_multiplier = 1440
+                unit_string = spelling
+                break
+    duration_amount_string = duration_string.replace(unit_string, "").strip()
+    duration_amount = int(duration_amount_string)
+    return duration_amount * minute_multiplier
 
 
 def find_day(user_input):
@@ -158,7 +186,10 @@ def process_event(user_input):
         index_of_substring = day["Substring Index"]
         user_input = (user_input[0: index_of_substring] +
                       user_input[(index_of_substring + substring_length): len(user_input)])
-    event_duration = find_duration(user_input)
+    event_duration_string = find_duration(user_input)
+    if event_duration_string is not None:
+        user_input = user_input.replace(event_duration_string, "").strip()
+        event_duration_minutes = process_duration(event_duration_string)
 
     event_name = user_input.strip()
 
@@ -197,8 +228,8 @@ def process_event(user_input):
 
     if event_datetime is None:
         event_datetime = datetime(year=event_year, month=event_month, day=event_day, hour=hours, minute=minutes)
-    if event_duration is None:
-        event_duration = default_duration_minutes
-    event_end_datetime = event_datetime + timedelta(minutes=event_duration)
+    if event_duration_string is None:
+        event_duration_minutes = default_duration_minutes
+    event_end_datetime = event_datetime + timedelta(minutes=event_duration_minutes)
 
     return {"Start DateTime": event_datetime, "End DateTime": event_end_datetime, "Name": event_name}
