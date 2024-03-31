@@ -202,7 +202,7 @@ class MyTestCase(unittest.TestCase):
         month = 3
         hour = 15
         minutes = 15
-        event_date = date_construction(month, day, hour).strftime("%d/%m/%y")
+        event_date = date_construction(month, day, hour)["Datetime"].strftime("%d/%m/%y")
         self.event_acceptation_test(name, event_date, time, hour, minutes)
 
     def test_accepts_date_long_year(self):
@@ -213,7 +213,7 @@ class MyTestCase(unittest.TestCase):
         hour = 21
         minutes = 50
         date_format = "%d/%m/%Y"
-        event_date = date_construction(month, day, hour).strftime(date_format)
+        event_date = date_construction(month, day, hour)["Datetime"].strftime(date_format)
         self.event_acceptation_test(name, event_date, time, hour, minutes, date_format=date_format)
 
     def test_accepts_date_next_year(self):
@@ -225,7 +225,7 @@ class MyTestCase(unittest.TestCase):
         minutes = 3
         years_later = 1
         date_format = "%d/%m/%Y"
-        event_date = date_construction(month, day, hour, minutes, years_later).strftime(date_format)
+        event_date = date_construction(month, day, hour, minutes, years_later)["Datetime"].strftime(date_format)
         self.event_acceptation_test(name, event_date, time, hour, minutes, date_format=date_format)
 
     def test_accepts_hours_duration(self):
@@ -259,7 +259,35 @@ class MyTestCase(unittest.TestCase):
         self.event_acceptation_test_day(name, date, time, hour, minutes, duration, units)
 
     def test_accepts_date_no_year(self):
-        code = None
+        name = "Company Drinks"
+        time = "4PM"
+        day = 28
+        month = 11
+        hour = 16
+        minutes = 0
+        date_format = "%d/%m"
+        event_date = date_construction(month, day, hour, minutes)["Datetime"].strftime(date_format)
+        self.event_acceptation_test(name, event_date, time, hour, minutes, date_format=date_format)
+
+    # TODO: write tests for accepting d/m or d/n/year  formats - no month/day/year nonsense
+
+    def event_rejection_test(self, expected_error, name, date, time, duration=None, units=None):
+        if duration is not None:
+            duration_string = str(duration) + units
+        event_string = string_shuffle_and_join([name, date, time, duration_string])
+        result = process_event(event_string)
+        self.assertTrue("Error" in result)
+        self.assertEqual(expected_error, result["Error"])
+
+    def test_too_many_days_feb(self):
+        name = "Reading Berserk"
+        date = "30/02"
+        duration = 6
+        units = "hours"
+        time = "12pm"
+        self.event_rejection_test("day is out of range for month February", name, date, time, duration, units)
+
+    # TODO: write test for failing and accepting on feb 29th depending on whether it's a leap year
 
     # TODO: write tests for failing on: too many days in month, too many hours, too many minutes
     # as well as for: no date, no name

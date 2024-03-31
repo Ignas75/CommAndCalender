@@ -145,6 +145,7 @@ def remove_substring(string, remove):
 
 
 # used for figuring out a valid date based on given time parameters
+# noinspection PyUnboundLocalVariable
 def date_construction(month, day, hour=0, minute=0, extra_years=0):
     current_datetime = datetime.now()
     current_date = current_datetime.date()
@@ -160,7 +161,17 @@ def date_construction(month, day, hour=0, minute=0, extra_years=0):
                     year += 1
                 elif hour == current_datetime.hour and minute <= current_datetime.minute:
                     year += 1
-    return datetime(year=year, month=month, day=day, hour=hour, minute=minute)
+    event_datetime = None
+    try:
+        event_datetime = datetime(year=year, month=month, day=day, hour=hour, minute=minute)
+    except ValueError as v:
+        if v.__str__() == "day is out of range for month":
+            month_name = datetime(year=year,month=month, day=1).strftime("%B")
+            return {"Error": v.__str__() + " " + month_name}
+        else:
+            return {"Error": v}
+    print(event_datetime)
+    return {"Datetime": event_datetime}
 
 
 def process_event(user_input):
@@ -225,7 +236,12 @@ def process_event(user_input):
             date_components = day["Date"].split("/")
             event_day = int(date_components[0])
             event_month = int(date_components[1])
-
+            date = date_construction(event_month, event_day, hours, minutes)
+            if "Error" in date:
+                # date already contains an error, can just pass it along
+                return date
+            else:
+                year = date["Datetime"].year
     if event_datetime is None:
         event_datetime = datetime(year=event_year, month=event_month, day=event_day, hour=hours, minute=minutes)
     if event_duration_string is None:
