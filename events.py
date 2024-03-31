@@ -59,7 +59,7 @@ def find_time(user_input):
     if not re.search(":[0-9]*:[0-9]*(am|pm)?", user_input) is None:
         return {"Error": "Time has too many colons"}
 
-    am_pm_time_pattern = r"[0-1]?[0-9]?:?[0-5]?[0-9]\s*(am|pm)"
+    am_pm_time_pattern = r"[0-1]?[0-9]?:?[0-5]?[0-9]\s*([aApP][mM])"
     out = re.search(am_pm_time_pattern, user_input)
     if not (out is None):
         return {"Match": out.group()}
@@ -77,6 +77,7 @@ def process_time(time):
     am_time = False
     pm_time = False
 
+    time = time.lower()
     if "am" in time:
         am_time = True
         time = time.replace("am", "")
@@ -116,20 +117,21 @@ def remove_substring(string, remove):
 
 
 # used for figuring out a valid date based on given time parameters
-def date_construction(month, day, hour=0, minute=0):
+def date_construction(month, day, hour=0, minute=0, extra_years=0):
     current_datetime = datetime.now()
     current_date = current_datetime.date()
-    year = current_date.year
-    if month < current_date.month:
-        year = year + 1
-    elif month == current_date.month:
-        if day < current_date.day:
+    year = current_date.year + extra_years
+    if extra_years != 0:
+        if month < current_date.month:
             year = year + 1
-        elif day == current_date.day:
-            if hour < current_datetime.hour:
-                year += 1
-            elif hour == current_datetime.hour and minute <= current_datetime.minute:
-                year += 1
+        elif month == current_date.month:
+            if day < current_date.day:
+                year = year + 1
+            elif day == current_date.day:
+                if hour < current_datetime.hour:
+                    year += 1
+                elif hour == current_datetime.hour and minute <= current_datetime.minute:
+                    year += 1
     return datetime(year=year, month=month, day=day, hour=hour, minute=minute)
 
 

@@ -94,7 +94,7 @@ class MyTestCase(unittest.TestCase):
         self.assertTrue(len(rejected_values) == 0)
 
     def event_acceptation_test(self, name, date_string, time_string, hour, minutes=0,
-                               duration=None, duration_units=None):
+                               duration=None, duration_units=None, date_format="%d/%m/%y"):
         duration_string = ""
         duration_minutes = ""
         if duration is not None:
@@ -124,7 +124,7 @@ class MyTestCase(unittest.TestCase):
             duration = duration_minutes
 
         event_date = event["Start DateTime"].date()
-        event_date_string = event_date.strftime("%d/%m/%y")
+        event_date_string = event_date.strftime(date_format)
         event_hour = event["Start DateTime"].hour
         event_minutes = event["Start DateTime"].minute
         # Bit lazy but, if the start date assertions pass, then it should be "safe" to base the expected end date on
@@ -172,7 +172,7 @@ class MyTestCase(unittest.TestCase):
         time = "13:00"
         date = "Wednesday"
         hour = 13
-        self.event_acceptation_test_day(name, date, time,hour)
+        self.event_acceptation_test_day(name, date, time, hour)
 
     def test_accepts_12am_event(self):
         name = "Rocket League with the boys"
@@ -194,6 +194,52 @@ class MyTestCase(unittest.TestCase):
         date = "Saturday"
         hour = 6
         self.event_acceptation_test_day(name, date, time, hour, 30)
+
+    def test_accepts_date_event(self):
+        name = "Family Get-Together"
+        time = "15:15"
+        day = 21
+        month = 3
+        hour = 15
+        minutes = 15
+        event_date = date_construction(month, day, hour).strftime("%d/%m/%y")
+        self.event_acceptation_test(name, event_date, time, hour, minutes)
+
+    def test_accepts_date_long_year(self):
+        name = "StarCraft III anniversary"
+        time = "21:50"
+        day = 3
+        month = 3
+        hour = 21
+        minutes = 50
+        date_format = "%d/%m/%Y"
+        event_date = date_construction(month, day, hour).strftime(date_format)
+        self.event_acceptation_test(name, event_date, time, hour, minutes, date_format=date_format)
+
+    def test_accepts_date_next_year(self):
+        name = "Pub Quiz"
+        time = "8:03PM"
+        day = 1
+        month = 7
+        hour = 20
+        minutes = 3
+        years_later = 1
+        date_format = "%d/%m/%Y"
+        event_date = date_construction(month, day, hour, minutes, years_later).strftime(date_format)
+        self.event_acceptation_test(name, event_date, time, hour, minutes, date_format=date_format)
+
+    def test_accepts_hour_duration(self):
+        name = "Ranked with the boys"
+        time = "6:15Pm"
+        date = "Friday"
+        hour = 18
+        minutes = 15
+        duration = 4
+        units = "hours"
+        self.event_acceptation_test_day(name, date, time, hour, minutes, duration, units)
+
+    def test_accepts_date_no_year(self):
+        code = None
 
     # TODO: write tests for failing on: too many days in month, too many hours, too many minutes
     # as well as for: no date, no name
