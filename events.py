@@ -23,7 +23,7 @@ def store_event(start_dt, end_dt, name):
 
 
 def find_duration(user_input):
-    pattern = r"[1-6]?[0-9]\s*(mins?|minutes?|hours?|days?)"
+    pattern = r"[1-6]?[0-9]\s*(minutes?|mins?|hrs?|hours?|days?)"
     match = re.search(pattern, user_input)
     if match is None:
         return None
@@ -34,14 +34,14 @@ def process_duration(duration_string):
     minute_multiplier = 0
     unit_string = ""
 
-    for spelling in ["minutes", "mins", "min", "minute"]:
+    for spelling in ["minutes", "minute", "mins", "min"]:
         if spelling in duration_string:
             minute_multiplier = 1
             unit_string = spelling
             break
 
     if unit_string == "":
-        for spelling in ["hours", "hrs", "hour"]:
+        for spelling in ["hours", "hour", "hrs", "hr"]:
             if spelling in duration_string:
                 minute_multiplier = 60
                 unit_string = spelling

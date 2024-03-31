@@ -238,6 +238,16 @@ class MyTestCase(unittest.TestCase):
         units = "hours"
         self.event_acceptation_test_day(name, date, time, hour, minutes, duration, units)
 
+    def test_accepts_minute_duration(self):
+        name = "One Piece Watch Party"
+        time = "03:00"
+        date = "Sunday"
+        hour = 3
+        minutes = 0
+        duration = 25
+        units = "minute"
+        self.event_acceptation_test_day(name, date, time, hour, minutes, duration, units)
+
     def test_accepts_date_no_year(self):
         code = None
 
