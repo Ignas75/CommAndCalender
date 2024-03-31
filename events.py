@@ -48,7 +48,7 @@ def process_duration(duration_string):
                 break
 
     if unit_string == "":
-        for spelling in ["day", "days"]:
+        for spelling in ["days", "day"]:
             if spelling in duration_string:
                 minute_multiplier = 1440
                 unit_string = spelling

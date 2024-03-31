@@ -228,7 +228,7 @@ class MyTestCase(unittest.TestCase):
         event_date = date_construction(month, day, hour, minutes, years_later).strftime(date_format)
         self.event_acceptation_test(name, event_date, time, hour, minutes, date_format=date_format)
 
-    def test_accepts_hour_duration(self):
+    def test_accepts_hours_duration(self):
         name = "Ranked with the boys"
         time = "6:15Pm"
         date = "Friday"
@@ -246,6 +246,16 @@ class MyTestCase(unittest.TestCase):
         minutes = 0
         duration = 25
         units = "minute"
+        self.event_acceptation_test_day(name, date, time, hour, minutes, duration, units)
+
+    def test_accepts_days_duration(self):
+        name = "Streamathon"
+        time = "20:45"
+        date = "Wednesday"
+        hour = 20
+        minutes = 45
+        duration = 2
+        units = "days"
         self.event_acceptation_test_day(name, date, time, hour, minutes, duration, units)
 
     def test_accepts_date_no_year(self):
