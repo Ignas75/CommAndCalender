@@ -104,7 +104,6 @@ def process_time(time):
     minutes = 0
     am_time = False
     pm_time = False
-
     time = time.lower()
     if "am" in time:
         am_time = True
@@ -117,15 +116,13 @@ def process_time(time):
 
     if ":" in time:
         time_components = (time.strip()).split(":")
-        hour_component = time_components[0]
-        if am_time and hour_component == 12:
-            hours = 0
-        elif pm_time and not hour_component == 12:
-            hours += int(time_components[0])
-        else:
-            hours = int(hour_component)
+        hour_component = int(time_components[0])
+        if not (hour_component == 12 and (am_time or pm_time)):
+            hours = hours + hour_component
         minutes = int(time_components[1])
-
+    else:
+        if int(time) != 12:
+            hours = hours + int(time)
     if am_time and hours > 11:
         return {"Error": "Are you sure? am time prefix only goes up to 12"}
     elif pm_time and hours > 23:
@@ -161,16 +158,14 @@ def date_construction(month, day, hour=0, minute=0, extra_years=0):
                     year += 1
                 elif hour == current_datetime.hour and minute <= current_datetime.minute:
                     year += 1
-    event_datetime = None
     try:
         event_datetime = datetime(year=year, month=month, day=day, hour=hour, minute=minute)
     except ValueError as v:
         if v.__str__() == "day is out of range for month":
-            month_name = datetime(year=year,month=month, day=1).strftime("%B")
+            month_name = datetime(year=year, month=month, day=1).strftime("%B")
             return {"Error": v.__str__() + " " + month_name}
         else:
             return {"Error": v}
-    print(event_datetime)
     return {"Datetime": event_datetime}
 
 
@@ -183,7 +178,8 @@ def process_event(user_input):
     user_input = remove_substring(user_input, time_found["Match"])
 
     if "Error" in processed_time:
-        return processed_time["Error"]
+        # processed_time is already a dictionary containing error, can just pass along
+        return processed_time
     hours = processed_time["Hours"]
     minutes = processed_time["Minutes"]
 
@@ -241,7 +237,7 @@ def process_event(user_input):
                 # date already contains an error, can just pass it along
                 return date
             else:
-                year = date["Datetime"].year
+                event_year = date["Datetime"].year
     if event_datetime is None:
         event_datetime = datetime(year=event_year, month=event_month, day=event_day, hour=hours, minute=minutes)
     if event_duration_string is None:

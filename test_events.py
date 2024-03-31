@@ -63,7 +63,7 @@ class MyTestCase(unittest.TestCase):
     def test_invalid_am_time_hours(self):
         out = process_time("13pm")
         self.assertTrue("Error" in out)
-        self.assertEqual("Are you sure? am and pm time only goes up to 12 as a prefix", out["Error"])
+        self.assertEqual("Are you sure? pm time prefix only goes up to 12", out["Error"])
 
     def test_invalid_am_time_minutes(self):
         out = process_time("12:70am")
@@ -114,7 +114,7 @@ class MyTestCase(unittest.TestCase):
         event_string = string_shuffle_and_join(event_string_values)
 
         event = process_event(event_string)
-        self.assertIsNotNone(event)
+        self.assertTrue("Error" not in event)
 
         # if duration is unspecified, we test to see if it applies the default event duration correctly
         if duration is None:
@@ -288,6 +288,8 @@ class MyTestCase(unittest.TestCase):
         self.event_rejection_test("day is out of range for month February", name, date, time, duration, units)
 
     # TODO: write test for failing and accepting on feb 29th depending on whether it's a leap year
+
+    # TODO: write test for rejecting 09am - cuz what sane person writes this intentionally
 
     # TODO: write tests for failing on: too many days in month, too many hours, too many minutes
     # as well as for: no date, no name
