@@ -95,7 +95,7 @@ def find_time(user_input):
     twenty_four_hour_time_pattern = r"[0-2]?[0-9]:[0-5][0-9]"
     out = re.search(twenty_four_hour_time_pattern, user_input)
     if out is None:
-        return {"Error": "no time found"}
+        return {"Error": "No event start time found"}
     return {"Match": out.group()}
 
 
@@ -173,7 +173,8 @@ def process_event(user_input):
     event_datetime = None
     time_found = find_time(user_input)
     if "Error" in time_found:
-        return time_found["Error"]
+        # time_found is already a dict containing an error at this point, can pass along the error upwards
+        return time_found
     processed_time = process_time(time_found["Match"])
     user_input = remove_substring(user_input, time_found["Match"])
 
@@ -185,7 +186,8 @@ def process_event(user_input):
 
     day = find_day(user_input)
     if "Error" in day:
-        return day["Error"]
+        # day is already a dict containing an error at this point, can pass the error upwards
+        return day
     if day["Format"] != DateFormat.DAY_OF_WEEK:
         user_input = remove_substring(user_input, day["Date"])
     else:
@@ -199,6 +201,8 @@ def process_event(user_input):
         event_duration_minutes = process_duration(event_duration_string)
 
     event_name = user_input.strip()
+    if event_name == "":
+        return {"Error": "Missing Event Name"}
 
     match day["Format"]:
         case DateFormat.DAY_OF_WEEK:

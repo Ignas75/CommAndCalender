@@ -271,10 +271,12 @@ class MyTestCase(unittest.TestCase):
 
     # TODO: write tests for accepting d/m or d/n/year  formats - no month/day/year nonsense
 
-    def event_rejection_test(self, expected_error, name, date, time, duration=None, units=None):
+    def event_rejection_test(self, expected_error, name="", date="", time="", duration=None, units=None):
+        event_details = [name, date, time]
         if duration is not None:
             duration_string = str(duration) + units
-        event_string = string_shuffle_and_join([name, date, time, duration_string])
+            event_details.append(duration_string)
+        event_string = string_shuffle_and_join(event_details)
         result = process_event(event_string)
         self.assertTrue("Error" in result)
         self.assertEqual(expected_error, result["Error"])
@@ -292,14 +294,24 @@ class MyTestCase(unittest.TestCase):
     # TODO: write test for rejecting 09am - cuz what sane person writes this intentionally
 
     # TODO: write tests for failing on: too many days in month, too many hours, too many minutes
-    # as well as for: no date, no name
 
     def test_missing_event_name(self):
-        self.assertEqual(process_event("Saturday 12pm"), "Missing Event Name")
+        date = "Saturday"
+        time = "12pm"
+        expected_error = "Missing Event Name"
+        self.event_rejection_test(expected_error, date=date, time=time)
 
     def test_missing_event_date(self):
-        self.assertEqual(process_event("Standup 10am"), "Missing Event Day")
+        name = "Standup"
+        time = "10am"
+        expected_error = "No date nor day found"
+        self.event_rejection_test(expected_error, name, time=time)
 
+    def test_missing_event_time(self):
+        name = "Listen to Rammstein"
+        date = "01/01"
+        expected_error = "No event start time found"
+        self.event_rejection_test(expected_error, name, date)
 
 if __name__ == '__main__':
     unittest.main()
