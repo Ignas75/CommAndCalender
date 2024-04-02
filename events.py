@@ -277,5 +277,4 @@ def process_event(user_input):
     if event_duration_string is None:
         event_duration_minutes = default_duration_minutes
     event_end_datetime = event_datetime + timedelta(minutes=event_duration_minutes)
-
     return {"Start DateTime": event_datetime, "End DateTime": event_end_datetime, "Name": event_name}
