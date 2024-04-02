@@ -50,36 +50,6 @@ class MyTestCase(unittest.TestCase):
     def test_pm_time(self):
         self.valid_time_test("10:50pm")
 
-    def test_invalid_24_hour_format_hours(self):
-        out = process_time("25:00")
-        self.assertTrue("Error" in out)
-        self.assertEqual("Too many hours", out["Error"])
-
-    def test_invalid_24_hour_format_minutes(self):
-        out = process_time("23:78")
-        self.assertTrue("Error" in out)
-        self.assertEqual("Too many minutes", out["Error"])
-
-    def test_invalid_am_time_hours(self):
-        out = process_time("13pm")
-        self.assertTrue("Error" in out)
-        self.assertEqual("Are you sure? pm time prefix only goes up to 12", out["Error"])
-
-    def test_invalid_am_time_minutes(self):
-        out = process_time("12:70am")
-        self.assertTrue("Error" in out)
-        self.assertEqual("Too many minutes", out["Error"])
-
-    def test_invalid_time_colons(self):
-        out = find_time("23:12:60")
-        self.assertTrue("Error" in out)
-        self.assertEqual("Time has too many colons", out["Error"])
-
-    def test_invalid_am_time_colons(self):
-        out = find_time("23:11:60am")
-        self.assertTrue("Error" in out)
-        self.assertEqual("Time has too many colons", out["Error"])
-
     def test_accepts_weekdays(self):
         accepted_values = []
         rejected_values = []
@@ -271,6 +241,36 @@ class MyTestCase(unittest.TestCase):
 
     # TODO: write tests for accepting d/m or d/n/year  formats - no month/day/year nonsense
 
+    def test_invalid_24_hour_format_hours(self):
+        out = process_time("25:00")
+        self.assertTrue("Error" in out)
+        self.assertEqual("Too many hours", out["Error"])
+
+    def test_invalid_24_hour_format_minutes(self):
+        out = process_time("23:78")
+        self.assertTrue("Error" in out)
+        self.assertEqual("Too many minutes", out["Error"])
+
+    def test_invalid_am_time_hours(self):
+        out = process_time("13pm")
+        self.assertTrue("Error" in out)
+        self.assertEqual("Are you sure? pm time prefix only goes up to 12", out["Error"])
+
+    def test_invalid_am_time_minutes(self):
+        out = process_time("12:70am")
+        self.assertTrue("Error" in out)
+        self.assertEqual("Too many minutes", out["Error"])
+
+    def test_invalid_time_colons(self):
+        out = find_time("23:12:60")
+        self.assertTrue("Error" in out)
+        self.assertEqual("Time has too many colons", out["Error"])
+
+    def test_invalid_am_time_colons(self):
+        out = find_time("23:11:60am")
+        self.assertTrue("Error" in out)
+        self.assertEqual("Time has too many colons", out["Error"])
+
     def event_rejection_test(self, expected_error, name="", date="", time="", duration=None, units=None):
         event_details = [name, date, time]
         if duration is not None:
@@ -289,12 +289,6 @@ class MyTestCase(unittest.TestCase):
         time = "12pm"
         self.event_rejection_test("day is out of range for month February", name, date, time, duration, units)
 
-    # TODO: write test for failing and accepting on feb 29th depending on whether it's a leap year
-
-    # TODO: write test for rejecting 09am - cuz what sane person writes this intentionally
-
-    # TODO: write tests for failing on: too many days in month, too many hours, too many minutes
-
     def test_missing_event_name(self):
         date = "Saturday"
         time = "12pm"
@@ -312,6 +306,48 @@ class MyTestCase(unittest.TestCase):
         date = "01/01"
         expected_error = "No event start time found"
         self.event_rejection_test(expected_error, name, date)
+
+    def test_too_many_days(self):
+        name = "Warhammer 40k Lore Discussion"
+        date = "32/08"
+        time = "18:01"
+        expected_error = "day is out of range for month August"
+        self.event_rejection_test(expected_error, name, date, time)
+
+    def test_too_many_hours(self):
+        name = "Unlike Pluto Listening Party"
+        date = "31/08"
+        time = "25:30"
+        expected_error = "Too many hours"
+        self.event_rejection_test(expected_error, name, date, time)
+
+    # TODO: write test for rejecting 09am - cuz what sane person writes this intentionally
+
+    def test_reject_non_leap_year_feb_29(self):
+        name = "Pigs fly"
+        # guaranteeing that the date is not before today by adding 1
+        next_year = datetime.now().year + 1
+        if next_year % 4 == 0 and not (next_year % 100 == 0):
+            year = next_year + 1
+        else:
+            year = next_year
+        date = "29/02/" + str(year)
+        time = "7am"
+        expected_error = "You entered February 29th on a non-leap year"
+        self.event_rejection_test(expected_error, name, date, time)
+
+    def test_accept_leap_year_feb_29(self):
+        name = "Eat chilli with mushrooms"
+        current_year = datetime.now().year
+        year = current_year + 1 + (4-((current_year + 1) % 4))
+        if year % 100 == 0 and year % 400 != 0:
+            year = year + 4
+        date = "29/02/" + str(year)
+        time = "6:30pm"
+        hour = 18
+        minutes = 30
+        self.event_acceptation_test(name, date, time, hour, minutes, date_format="%d/%m/%Y")
+
 
 if __name__ == '__main__':
     unittest.main()

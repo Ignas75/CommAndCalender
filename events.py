@@ -141,11 +141,37 @@ def remove_substring(string, remove):
     return string.replace(remove, "").strip()
 
 
+def date_validation_and_construction(year, month, day, hour=0, minute=0):
+    current_datetime = datetime.now()
+    current_date = current_datetime.date()
+    if year < current_date.year:
+        return {"Error": "Cannot create an event for a year that has already passed"}
+    elif year == current_date.year:
+        if month < current_date.month:
+            return {"Error": "Cannot create an event for a month that has already passed"}
+        elif month == current_date.month:
+            if day < current_date.day:
+                return {"Error": "Cannot create and event for day that has already passed"}
+
+    if day == 29 and month == 2:
+        if year % 4 != 0 and not (year % 100 == 0 and year % 400 != 0):
+            return {"Error": "You entered February 29th on a non-leap year"}
+    try:
+        event_datetime = datetime(year=year, month=month, day=day, hour=hour, minute=minute)
+    except ValueError as v:
+        if v.__str__() == "day is out of range for month":
+            month_name = datetime(year=year, month=month, day=1).strftime("%B")
+            return {"Error": v.__str__() + " " + month_name}
+        else:
+            return {"Error": v}
+    return {"Datetime": event_datetime}
+
+
 # used for figuring out a valid date based on given time parameters
-# noinspection PyUnboundLocalVariable
 def date_construction(month, day, hour=0, minute=0, extra_years=0):
     current_datetime = datetime.now()
     current_date = current_datetime.date()
+
     year = current_date.year + extra_years
     if extra_years != 0:
         if month < current_date.month:
@@ -243,7 +269,11 @@ def process_event(user_input):
             else:
                 event_year = date["Datetime"].year
     if event_datetime is None:
-        event_datetime = datetime(year=event_year, month=event_month, day=event_day, hour=hours, minute=minutes)
+        potential_date = date_validation_and_construction(event_year, event_month, event_day, hours, minutes)
+        if "Error" in potential_date:
+            return potential_date
+        else:
+            event_datetime = potential_date["Datetime"]
     if event_duration_string is None:
         event_duration_minutes = default_duration_minutes
     event_end_datetime = event_datetime + timedelta(minutes=event_duration_minutes)
