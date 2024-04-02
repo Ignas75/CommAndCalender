@@ -239,7 +239,13 @@ class MyTestCase(unittest.TestCase):
         event_date = date_construction(month, day, hour, minutes)["Datetime"].strftime(date_format)
         self.event_acceptation_test(name, event_date, time, hour, minutes, date_format=date_format)
 
-    # TODO: write tests for accepting d/m or d/n/year  formats - no month/day/year nonsense
+    def test_accepts_09_am(self):
+        name = "Malevolent early morning lecture"
+        time = "09am"
+        date = "Monday"
+        hour = 9
+        minutes = 0
+        self.event_acceptation_test_day(name, date, time, hour, minutes)
 
     def test_invalid_24_hour_format_hours(self):
         out = process_time("25:00")
@@ -321,8 +327,6 @@ class MyTestCase(unittest.TestCase):
         expected_error = "Too many hours"
         self.event_rejection_test(expected_error, name, date, time)
 
-    # TODO: write test for rejecting 09am - cuz what sane person writes this intentionally
-
     def test_reject_non_leap_year_feb_29(self):
         name = "Pigs fly"
         # guaranteeing that the date is not before today by adding 1
@@ -337,7 +341,7 @@ class MyTestCase(unittest.TestCase):
         self.event_rejection_test(expected_error, name, date, time)
 
     def test_accept_leap_year_feb_29(self):
-        name = "Eat chilli with mushrooms"
+        name = "Eat chili with mushrooms"
         current_year = datetime.now().year
         year = current_year + 1 + (4-((current_year + 1) % 4))
         if year % 100 == 0 and year % 400 != 0:
