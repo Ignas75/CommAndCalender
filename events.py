@@ -18,10 +18,6 @@ events = []
 days = ["monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday"]
 
 
-def store_event(start_dt, end_dt, name):
-    events.append({"start_dt": start_dt, "end_dt": end_dt, "name": name})
-
-
 def find_duration(user_input):
     pattern = r"[1-6]?[0-9]\s*(minutes?|mins?|hrs?|hours?|days?)"
     match = re.search(pattern, user_input)
@@ -278,3 +274,7 @@ def process_event(user_input):
         event_duration_minutes = default_duration_minutes
     event_end_datetime = event_datetime + timedelta(minutes=event_duration_minutes)
     return {"Start DateTime": event_datetime, "End DateTime": event_end_datetime, "Name": event_name}
+
+
+def detect_timezone():
+    return datetime.now().astimezone().tzinfo

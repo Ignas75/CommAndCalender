@@ -1,6 +1,42 @@
 from events import process_event
+import os
+from datetime import datetime
 
 events = []
+folder_name = "data"
+absolute_path = os.path.dirname(__file__)
+data_folder_path = os.path.join(absolute_path, folder_name)
+
+data_file_path = "./data/events.txt"
+datetime_display_format = "%d/%m/%Y %H:%M"
+
+
+def save_events():
+    headers = ["Name", "Start DateTime", "End DateTime"]
+
+    if not os.path.exists(data_folder_path):
+        os.mkdir(data_folder_path)
+
+    file = open(data_file_path, "w")
+    for event in events:
+        line_strs = [event["Name"], event["Start DateTime"].strftime(datetime_display_format),
+                     event["End DateTime"].strftime(datetime_display_format)]
+        file.write(",".join(line_strs) + "\n")
+    file.close()
+
+
+def load_events():
+    if os.path.exists(data_folder_path):
+        file = open(data_file_path, "r")
+        for line in file:
+            event = {}
+            values = line.split(",")
+            event["Name"] = values[0]
+            event["Start DateTime"] = datetime.strptime(values[1], datetime_display_format)
+            # removing the end space and or newline character to make this work? (don't fully get it)1
+            event["End DateTime"] = datetime.strptime(values[2].strip(), datetime_display_format)
+            events.append(event)
+        file.close()
 
 
 def view_events():
@@ -9,8 +45,8 @@ def view_events():
     else:
         for event in events:
             event_name = event["Name"]
-            event_start_time = event["Start DateTime"].strftime("%d/%m/%Y %H:%M")
-            event_end_time = event["End DateTime"].strftime("%d/%m/%Y %H:%M")
+            event_start_time = event["Start DateTime"].strftime(datetime_display_format)
+            event_end_time = event["End DateTime"].strftime(datetime_display_format)
             print(event_name + ":\n" + "Starting: " + event_start_time + "\nEnding: " + event_end_time + "\n\n")
 
 
@@ -30,9 +66,11 @@ def add_event_menu():
                 print("There is a mistake in the event details:\n" + event["Error"])
             else:
                 events.append(event)
+    save_events()
 
 
 def menu():
+    load_events()
     repeat_menu = True
     while repeat_menu:
         print("0: Add Events")
