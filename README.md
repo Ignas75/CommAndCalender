@@ -12,7 +12,7 @@ A project intended to create a program which:
 - [x] Add commandline menu loop
 - [x] Create basic event storage format
 - [x] Add pattern recognition for command-line input, for creating events (regex)
-- [ ] Make menu option for displaying stored schedule work
+- [x] Make menu option for displaying stored schedule work
 - [ ] Adjust event format to match google calendar's events
 - [ ] Add timezone detection and settings
 - [ ] Add exporting events via Google calendar's API
