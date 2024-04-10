@@ -13,8 +13,6 @@ datetime_display_format = "%d/%m/%Y %H:%M"
 
 
 def save_events():
-    headers = ["Name", "Start DateTime", "End DateTime"]
-
     if not os.path.exists(data_folder_path):
         os.mkdir(data_folder_path)
 
@@ -89,13 +87,13 @@ def view_events():
 
 def add_event_menu():
     add_more = True
-    hint = "If you want to stop adding events, enter 'r' at any point, and you can enter 'h' to see this hint again"
+    hint = "If you want to stop adding events, enter 'e' at any point, and you can enter 'h' to see this hint again"
     print(hint)
     while add_more:
         user_input = input("Enter event details: ")
         if user_input == "h":
             print(hint)
-        elif user_input == "r":
+        elif user_input == "e":
             add_more = False
         else:
             event = process_event(user_input)
