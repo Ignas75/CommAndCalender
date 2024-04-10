@@ -1,6 +1,7 @@
 from events import process_event
 import os
 from datetime import datetime
+from icalendar import Calendar, Event
 
 events = []
 folder_name = "data"
@@ -23,6 +24,42 @@ def save_events():
                      event["End DateTime"].strftime(datetime_display_format)]
         file.write(",".join(line_strs) + "\n")
     file.close()
+
+
+def convert_events_to_calendar(event_list):
+    cal = Calendar()
+    for event in event_list:
+        cal_event = Event()
+        cal_event.add('summary', event["Name"])
+        cal_event.add('dtstart', event["Start DateTime"])
+        cal_event.add('dtend', event["End DateTime"])
+        cal.add_component(cal_event)
+    return cal
+
+
+def save_calendar(name):
+    calendar_folder_path = os.path.join(absolute_path, "calendars")
+    if not os.path.exists(calendar_folder_path):
+        os.mkdir(calendar_folder_path)
+    print("Saving calendar to:")
+    calendar_file_name = name + ".ics"
+    calendar_file_path = os.path.join(calendar_folder_path, calendar_file_name)
+    print(calendar_file_path)
+    calendar_relative_path = os.path.join("calendars", calendar_file_name)
+    cal = convert_events_to_calendar(events)
+    with open(calendar_relative_path, "wb") as f:
+        f.write(cal.to_ical())
+
+
+def save_calendar_menu():
+    if len(events) == 0:
+        print("There are no events to save, please create some first")
+    else:
+        file_name = input("Enter the file name you wish to use: ")
+        if file_name == "":
+            file_name = "events"
+            print("File Name was left blank, using default file name of: " + file_name)
+        save_calendar(file_name)
 
 
 def load_events():
@@ -69,6 +106,12 @@ def add_event_menu():
     save_events()
 
 
+description = """This is a commandline application intended for entering details of events one by one through quick copy paste.
+Rather than through navigating menus in calendar apps to create events one by one. 
+You will still need to find the file on your system and import the ics file, so you probably want to have at least 4-5 
+events lined up for this program to be worthwhile."""
+
+
 def menu():
     load_events()
     repeat_menu = True
@@ -76,8 +119,9 @@ def menu():
         print("0: Add Events")
         print("1: View Events")
         print("2: Edit Events")
-        print("3: Help")
-        print("4: Exit\n")
+        print("3: Export to Calendar file\n")
+        print("h: Help")
+        print("e: Exit\n")
         choice = input("Enter your choice: ").strip()
         match choice:
             case "0":
@@ -87,8 +131,12 @@ def menu():
             case "2":
                 print("WIP")
             case "3":
-                print("Currently only exiting works (:\n")
-            case "4":
+                save_calendar_menu()
+            case "h":
+                print(description)
+                print("\nYou can choose what to do by entering a number between 0 and 3\n")
+                print("Later on there will be options to press h in the other sub-menus to get more detailed hints")
+            case "e":
                 print("\nExiting...")
                 repeat_menu = False
 

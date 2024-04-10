@@ -1,4 +1,7 @@
 # PyCharm
 /.idea/*
 __pycache__/*
+
+# Event data files
 data/*
+calendars/*
