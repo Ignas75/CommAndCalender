@@ -12,6 +12,17 @@ data_file_path = "./data/events.txt"
 datetime_display_format = "%d/%m/%Y %H:%M"
 
 
+def event_has_started(event):
+    return event["Start DateTime"] <= datetime.now()
+
+
+def event_text(event):
+    event_name = event["Name"]
+    event_start_time = event["Start DateTime"].strftime(datetime_display_format)
+    event_end_time = event["End DateTime"].strftime(datetime_display_format)
+    return event_name + ":\n" + "Starting: " + event_start_time + "\nEnding: " + event_end_time + "\n\n"
+
+
 def save_events():
     if not os.path.exists(data_folder_path):
         os.mkdir(data_folder_path)
@@ -24,29 +35,97 @@ def save_events():
     file.close()
 
 
-def convert_events_to_calendar(event_list):
+def delete_past_events():
+    print("We would delete the following events:\n\n")
+    events_to_delete_indices = []
+    for i in range(0, len(events)):
+        event = events[i]
+        if event_has_started(event):
+            events_to_delete_indices.append(i)
+        else:
+            print(event_text(event))
+
+    prompt = "\nAre you sure you want to delete all of the above?"
+    options = ["yes", "y", "no", "n"]
+    choice = generic_menu(prompt, options)
+    if choice in ["yes", "y"]:
+        # deleting from the end to keep the process "clean" and not delete other events accidentally
+        events_to_delete_indices.reverse()
+        for i in events_to_delete_indices:
+            events.pop(i)
+        # making changes permanent
+        save_events()
+
+
+def convert_events_to_calendar(event_list, ignore_past_events=True):
     cal = Calendar()
     for event in event_list:
-        cal_event = Event()
-        cal_event.add('summary', event["Name"])
-        cal_event.add('dtstart', event["Start DateTime"])
-        cal_event.add('dtend', event["End DateTime"])
-        cal.add_component(cal_event)
+        if not (ignore_past_events and event_has_started(event)):
+            cal_event = Event()
+            cal_event.add('summary', event["Name"])
+            cal_event.add('dtstart', event["Start DateTime"])
+            cal_event.add('dtend', event["End DateTime"])
+            cal.add_component(cal_event)
     return cal
 
 
+def has_passed_event():
+    for event in events:
+        if event_has_started(event):
+            return True
+    return False
+
+
+def has_upcoming_event():
+    for event in events:
+        if not event_has_started(event):
+            return True
+    return False
+
+
+def generic_menu(prompt, options):
+    valid_input = False
+    choice = None
+    prompt_with_options_text = prompt + "\nPlease enter one of (" + ",".join(options) + "): "
+    while not valid_input:
+        choice = input(prompt_with_options_text).lower()
+        if choice in options:
+            valid_input = True
+        else:
+            print("You entered: '" + choice + "', which is not one of : " + ",".join(options))
+
+    return choice
+
+
 def save_calendar(name):
+    ignore_past_events = True
+    if has_passed_event():
+        prompt = "\nDo you want to export past events?"
+        options = ["y", "yes", "no", "n"]
+        choice = generic_menu(prompt, options)
+        confirmations = ["y", "yes"]
+        if choice in confirmations:
+            ignore_past_events = False
+        else:
+            prompt = "\nDo you want to keep these past events?"
+            choice = generic_menu(prompt, options)
+            if choice not in confirmations:
+                delete_past_events()
+
     calendar_folder_path = os.path.join(absolute_path, "calendars")
     if not os.path.exists(calendar_folder_path):
         os.mkdir(calendar_folder_path)
-    print("Saving calendar to:")
     calendar_file_name = name + ".ics"
     calendar_file_path = os.path.join(calendar_folder_path, calendar_file_name)
-    print(calendar_file_path)
     calendar_relative_path = os.path.join("calendars", calendar_file_name)
-    cal = convert_events_to_calendar(events)
-    with open(calendar_relative_path, "wb") as f:
-        f.write(cal.to_ical())
+    cal = convert_events_to_calendar(events, ignore_past_events)
+    if len(events) == 0 or (ignore_past_events and not has_upcoming_event()):
+        print("There are no events to save")
+    else:
+        print("Saving calendar to:")
+        print(calendar_file_path)
+        with open(calendar_relative_path, "wb") as f:
+            f.write(cal.to_ical())
 
 
 def save_calendar_menu():
@@ -79,10 +158,7 @@ def view_events():
         print("There are no events to show\n")
     else:
         for event in events:
-            event_name = event["Name"]
-            event_start_time = event["Start DateTime"].strftime(datetime_display_format)
-            event_end_time = event["End DateTime"].strftime(datetime_display_format)
-            print(event_name + ":\n" + "Starting: " + event_start_time + "\nEnding: " + event_end_time + "\n\n")
+            print(event_text(event))
 
 
 def add_event_menu():

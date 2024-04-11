@@ -19,9 +19,9 @@ each one to export into a calendar of your choice with less menu navigation.
 - [x] Make menu option for displaying stored schedule work
 - [x] Adjust event format to match google calendar's events
 - [x] Add exporting events via iCalendar format
-  - [ ] Add confirmation for also exporting events that have already started or passed
-    - If rejected, could also give an option to delete said events as they are no longer necessary
-- [ ] Add a more "dynamic" viewing of the events in the View events optio
+  - [x] Add confirmation for also exporting events that have already started or passed
+  - [x] If rejected, could also give an option to delete said events as they are no longer necessary
+- [ ] Add a more "dynamic" viewing of the events in the View events option
   - Like providing time ranges
   - Or viewing x amount of events 
   - Or viewing "past"/"future" events only
