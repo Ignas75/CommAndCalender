@@ -149,7 +149,7 @@ class MyTestCase(unittest.TestCase):
         time = "12am"
         date = "Friday"
         hour = 0
-        self.event_acceptation_test_day(name, date, time,  hour)
+        self.event_acceptation_test_day(name, date, time, hour)
 
     def test_accepts_12pm_event(self):
         name = "Lunch"
@@ -343,7 +343,7 @@ class MyTestCase(unittest.TestCase):
     def test_accept_leap_year_feb_29(self):
         name = "Eat chili with mushrooms"
         current_year = datetime.now().year
-        year = current_year + 1 + (4-((current_year + 1) % 4))
+        year = current_year + 1 + (4 - ((current_year + 1) % 4))
         if year % 100 == 0 and year % 400 != 0:
             year = year + 4
         date = "29/02/" + str(year)
@@ -352,6 +352,282 @@ class MyTestCase(unittest.TestCase):
         minutes = 30
         self.event_acceptation_test(name, date, time, hour, minutes, date_format="%d/%m/%Y")
 
+    def test_is_today_now(self):
+        event = {"Start DateTime": datetime.now()}
+        self.assertTrue(is_today(event))
+
+    def test_is_today_lower_bound(self):
+        dt_now = datetime.now()
+        day = dt_now.day
+        month = dt_now.month
+        year = dt_now.year
+        hour = 0
+        minute = 0
+        event_dt = datetime(year, month, day, hour, minute)
+        event = {"Start DateTime": event_dt}
+        self.assertTrue(is_today(event))
+
+    def test_is_today_upper_bound(self):
+        dt_now = datetime.now()
+        day = dt_now.day
+        month = dt_now.month
+        year = dt_now.year
+        hour = 23
+        minute = 59
+        event_dt = datetime(year, month, day, hour, minute)
+        event = {"Start DateTime": event_dt}
+        self.assertTrue(is_today(event))
+
+    def test_is_today_not_yesterday(self):
+        dt = datetime.now() - timedelta(days=1)
+        event = {"Start DateTime": dt}
+        self.assertFalse(is_today(event))
+
+    def test_is_today_not_tomorrow(self):
+        dt = datetime.now() + timedelta(days=1)
+        event = {"Start DateTime": dt}
+        self.assertFalse(is_today(event))
+
+    def test_is_tomorrow_basic(self):
+        dt = datetime.now() + timedelta(days=1)
+        event = {"Start DateTime": dt}
+        self.assertTrue(is_tomorrow(event))
+
+    def test_is_tomorrow_lower_bound(self):
+        dt_tomorrow = datetime.now() + timedelta(days=1)
+        day = dt_tomorrow.day
+        month = dt_tomorrow.month
+        year = dt_tomorrow.year
+        hour = 0
+        minute = 0
+        event_dt = datetime(year, month, day, hour, minute)
+        event = {"Start DateTime": event_dt}
+        self.assertTrue(is_tomorrow(event))
+
+    def test_is_tomorrow_upper_bound(self):
+        dt_tomorrow = datetime.now() + timedelta(days=1)
+        day = dt_tomorrow.day
+        month = dt_tomorrow.month
+        year = dt_tomorrow.year
+        hour = 23
+        minute = 59
+        event_dt = datetime(year, month, day, hour, minute)
+        event = {"Start DateTime": event_dt}
+        self.assertTrue(is_tomorrow(event))
+
+    def test_is_tomorrow_not_today(self):
+        dt = datetime.now()
+        event = {"Start DateTime": dt}
+        self.assertFalse(is_tomorrow(event))
+
+    def test_is_tomorrow_not_overmorrow(self):
+        dt = datetime.now() + timedelta(days=2)
+        event = {"Start DateTime": dt}
+        self.assertFalse(is_tomorrow(event))
+
+    def test_is_this_week_today(self):
+        dt = datetime.now()
+        event = {"Start DateTime": dt}
+        self.assertTrue(is_this_week(event))
+
+    def test_is_this_week_lower_bound(self):
+        dt_now = datetime.now()
+        days_offset = dt_now.weekday()
+        dt_monday = dt_now - timedelta(days=days_offset)
+        year = dt_monday.year
+        month = dt_monday.month
+        day = dt_monday.day
+        dt = datetime(year, month, day, 0, 0)
+        event = {"Start DateTime": dt}
+        self.assertTrue(is_this_week(event))
+
+    def test_is_this_week_upper_bound(self):
+        dt_now = datetime.now()
+        days_offset = 7 - dt_now.weekday()
+        dt_sunday = dt_now + timedelta(days=days_offset)
+        year = dt_sunday.year
+        month = dt_sunday.month
+        day = dt_sunday.day
+        dt = datetime(year, month, day, 0, 0, 0, 0) - timedelta(microseconds=1)
+        event = {"Start DateTime": dt}
+        self.assertTrue(is_this_week(event))
+
+    def test_is_this_week_not_last_week(self):
+        last_week_dt = datetime.now() - timedelta(days=7)
+        event = {"Start DateTime": last_week_dt}
+        self.assertFalse(is_this_week(event))
+
+    def test_is_this_week_not_next_week(self):
+        next_week_dt = datetime.now() + timedelta(days=7)
+        event = {"Start DateTime": next_week_dt}
+        self.assertFalse(is_this_week(event))
+
+    def test_is_this_week_not_last_week_upper_bound(self):
+        dt_now = datetime.now()
+        days_offset = dt_now.weekday()
+        dt_monday = dt_now - timedelta(days=days_offset)
+        year = dt_monday.year
+        month = dt_monday.month
+        day = dt_monday.day
+        dt = datetime(year, month, day, 0, 0) - timedelta(microseconds=1)
+        event = {"Start DateTime": dt}
+        self.assertFalse(is_this_week(event))
+
+    def test_is_this_week_not_next_week_lower_bound(self):
+        dt_now = datetime.now()
+        days_offset = 7 - dt_now.weekday()
+        dt_sunday = dt_now + timedelta(days=days_offset)
+        year = dt_sunday.year
+        month = dt_sunday.month
+        day = dt_sunday.day
+        dt = datetime(year, month, day, 0, 0, 0, 0)
+        event = {"Start DateTime": dt}
+        self.assertFalse(is_this_week(event))
+
+    def test_is_next_week(self):
+        dt_next_week = datetime.now() + timedelta(days=7)
+        event = {"Start DateTime": dt_next_week}
+        self.assertTrue(is_next_week(event))
+
+    def test_is_next_week_lower_bound(self):
+        dt_now = datetime.now()
+        days_offset = 7 - dt_now.weekday()
+        dt_sunday = dt_now + timedelta(days=days_offset)
+        year = dt_sunday.year
+        month = dt_sunday.month
+        day = dt_sunday.day
+        dt = datetime(year, month, day, 0, 0, 0, 0)
+        event = {"Start DateTime": dt}
+        self.assertTrue(is_next_week(event))
+
+    def test_is_next_week_upper_bound(self):
+        dt_now = datetime.now()
+        days_offset = 14 - dt_now.weekday()
+        dt_sunday = dt_now + timedelta(days=days_offset)
+        year = dt_sunday.year
+        month = dt_sunday.month
+        day = dt_sunday.day
+        dt = datetime(year, month, day, 0, 0, 0, 0) - timedelta(microseconds=1)
+        event = {"Start DateTime": dt}
+        self.assertTrue(is_next_week(event))
+
+    def test_is_next_week_not_this_week(self):
+        dt = datetime.now()
+        event = {"Start DateTime": dt}
+        self.assertFalse(is_next_week(event))
+
+    def test_is_next_week_not_this_week_upper_bound(self):
+        dt_now = datetime.now()
+        days_offset = 7 - dt_now.weekday()
+        dt_sunday = dt_now + timedelta(days=days_offset)
+        year = dt_sunday.year
+        month = dt_sunday.month
+        day = dt_sunday.day
+        dt = datetime(year, month, day, 0, 0, 0, 0) - timedelta(microseconds=1)
+        event = {"Start DateTime": dt}
+        self.assertFalse(is_next_week(event))
+
+    def test_is_next_week_not_week_after_next_lower_bound(self):
+        dt_now = datetime.now()
+        days_offset = 14 - dt_now.weekday()
+        dt_sunday = dt_now + timedelta(days=days_offset)
+        year = dt_sunday.year
+        month = dt_sunday.month
+        day = dt_sunday.day
+        dt = datetime(year, month, day, 0, 0, 0, 0)
+        event = {"Start DateTime": dt}
+        self.assertFalse(is_next_week(event))
+
+    def test_is_this_month(self):
+        dt = datetime.now()
+        event = {"Start DateTime": dt}
+        self.assertTrue(is_this_month(event))
+
+    def test_is_this_month_lower_bound(self):
+        dt_now = datetime.now()
+        year = dt_now.year
+        month = dt_now.month
+        dt = datetime(year, month, 1, 0, 0, 0, 0)
+        event = {"Start DateTime": dt}
+        self.assertTrue(is_this_month(event))
+
+    def test_is_this_month_upper_bound(self):
+        dt_now = datetime.now()
+        year = dt_now.year
+        month = dt_now.month
+        day = days_in_month(month, year)
+        dt = datetime(year, month, day) + timedelta(days=1) - timedelta(microseconds=1)
+        event = {"Start DateTime": dt}
+        self.assertTrue(is_this_month(event))
+
+    def test_is_this_month_not_last_month_upper_bound(self):
+        dt_now = datetime.now()
+        year = dt_now.year
+        month = dt_now.month
+        dt = datetime(year, month, 1, 0, 0, 0, 0) - timedelta(microseconds=1)
+        event = {"Start DateTime": dt}
+        self.assertFalse(is_this_month(event))
+
+    def test_is_this_month_not_next_month_lower_bound(self):
+        dt_now = datetime.now()
+        year = dt_now.year
+        month = dt_now.month + 1
+        if month > 12:
+            month = 1
+            year = year + 1
+        dt = datetime(year, month, 1, 0, 0)
+        event = {"Start DateTime": dt}
+        self.assertFalse(is_this_month(event))
+
+    def test_is_next_month_lower_bound(self):
+        dt_now = datetime.now()
+        year = dt_now.year
+        month = dt_now.month + 1
+        if month > 12:
+            month = 1
+            year = year + 1
+        dt = datetime(year, month, 1, 0, 0)
+        event = {"Start DateTime": dt}
+        self.assertTrue(is_next_month(event))
+
+    def test_is_next_month_upper_bound(self):
+        dt_now = datetime.now()
+        year = dt_now.year
+        month = dt_now.month + 1
+        if month > 12:
+            month = 1
+            year = year + 1
+        day = days_in_month(month, year)
+        dt = datetime(year, month, day, 0, 0) + timedelta(days=1) - timedelta(microseconds=1)
+        event = {"Start DateTime": dt}
+        self.assertTrue(is_next_month(event))
+
+    def test_is_next_month_not_now(self):
+        dt = datetime.now()
+        event = {"Start DateTime": dt}
+        self.assertFalse(is_next_month(event))
+
+    def test_is_next_month_not_this_month_upper_bound(self):
+        dt_now = datetime.now()
+        year = dt_now.year
+        month = dt_now.month + 1
+        if month > 12:
+            month = 1
+            year = year + 1
+        dt = datetime(year, month, 1, 0, 0) - timedelta(microseconds=1)
+        event = {"Start DateTime": dt}
+        self.assertFalse(is_next_month(event))
+
+    def test_is_next_month_not_month_after_next_lower_bound(self):
+        dt_now = datetime.now()
+        year = dt_now.year
+        month = dt_now.month + 2
+        if month > 12:
+            month = 1
+            year = year + 1
+        dt = datetime(year, month, 1, 0, 0)
+        event = {"Start DateTime": dt}
+        self.assertFalse(is_next_month(event))
 
 if __name__ == '__main__':
     unittest.main()

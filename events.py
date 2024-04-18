@@ -18,6 +18,85 @@ events = []
 days = ["monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday"]
 
 
+def days_in_month(month, year):
+    day = 31
+    match month:
+        case 2:
+            if year % 4 == 0 and (year % 100 == 0 and not year % 400 == 0):
+                day = 29
+            else:
+                day = 28
+        case 4:
+            day = 30
+        case 6:
+            day = 30
+        case 9:
+            day = 30
+        case 11:
+            day = 30
+    return day
+
+
+def is_today(event):
+    dt_now = datetime.now()
+    event_dt = event["Start DateTime"]
+    return dt_now.weekday() == event_dt.weekday() and event_dt - dt_now < timedelta(days=1)
+
+
+def is_tomorrow(event):
+    dt_now = datetime.now()
+    tomorrow_dt = dt_now + timedelta(days=1)
+    year = tomorrow_dt.year
+    month = tomorrow_dt.month
+    day = tomorrow_dt.day
+    tomorrow_start_dt = datetime(year, month, day, 0, 0)
+    tomorrow_end_dt = (tomorrow_start_dt + timedelta(days=1)) - timedelta(microseconds=1)
+
+    return tomorrow_start_dt <= event["Start DateTime"] <= tomorrow_end_dt
+
+
+def is_this_week(event):
+    dt_now = datetime.now()
+    offset_to_week_start = dt_now.weekday()
+    first_day_of_week = dt_now - timedelta(days=offset_to_week_start)
+    year = first_day_of_week.year
+    month = first_day_of_week.month
+    day = first_day_of_week.day
+    week_start_dt = datetime(year, month, day, 0, 0)
+    week_end_dt = (week_start_dt + timedelta(days=7)) - timedelta(microseconds=1)
+
+    return week_start_dt <= event["Start DateTime"] <= week_end_dt
+
+
+def is_next_week(event):
+    dt_now = datetime.now()
+    offset_to_week_start = 7 - dt_now.weekday()
+    first_day_of_week = dt_now + timedelta(days=offset_to_week_start)
+    year = first_day_of_week.year
+    month = first_day_of_week.month
+    day = first_day_of_week.day
+    week_start_dt = datetime(year, month, day, 0, 0)
+    week_end_dt = (week_start_dt + timedelta(days=7)) - timedelta(microseconds=1)
+    return week_start_dt <= event["Start DateTime"] <= week_end_dt
+
+
+def is_this_month(event):
+    event_dt = event["Start DateTime"]
+    dt_now = datetime.now()
+    return event_dt.month == dt_now.month and event_dt.year == dt_now.year
+
+
+def is_next_month(event):
+    event_dt = event["Start DateTime"]
+    now_dt = datetime.now()
+    year = now_dt.year
+    next_month = now_dt.month + 1
+    if next_month > 12:
+        next_month = 1
+        year = year + 1
+    return event_dt.month == next_month and event_dt.year == year
+
+
 def find_duration(user_input):
     pattern = r"[1-6]?[0-9]\s*(minutes?|mins?|hrs?|hours?|days?)"
     match = re.search(pattern, user_input)
@@ -232,7 +311,7 @@ def process_event(user_input):
             day_int = days.index(day["Day"])
             current_weekday_int = datetime.now().date().weekday()
             if day_int == current_weekday_int:
-                if hours > datetime.now().hour or (hours == datetime.now().hour and minutes >= datetime.now().minute):
+                if hours > datetime.now().hour or (hours == datetime.now().hour and minutes <= datetime.now().minute):
                     days_offset = 7
             else:
                 days_offset = (day_int - current_weekday_int) % 7

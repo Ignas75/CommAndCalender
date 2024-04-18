@@ -5,3 +5,4 @@ __pycache__/*
 # Event data files
 data/*
 calendars/*
+ideas_notes.txt
