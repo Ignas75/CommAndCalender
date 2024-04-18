@@ -168,8 +168,9 @@ class MyTestCase(unittest.TestCase):
     def test_accepts_date_event(self):
         name = "Family Get-Together"
         time = "15:15"
+        dt_now = datetime.now()
         day = 21
-        month = 3
+        month = (dt_now.month + 1) % 12
         hour = 15
         minutes = 15
         event_date = date_construction(month, day, hour)["Datetime"].strftime("%d/%m/%y")
@@ -179,7 +180,8 @@ class MyTestCase(unittest.TestCase):
         name = "StarCraft III anniversary"
         time = "21:50"
         day = 3
-        month = 3
+        dt_now = datetime.now()
+        month = (dt_now.month + 1) % 12
         hour = 21
         minutes = 50
         date_format = "%d/%m/%Y"
