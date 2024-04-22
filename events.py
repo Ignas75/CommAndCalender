@@ -311,7 +311,7 @@ def process_event(user_input):
             day_int = days.index(day["Day"])
             current_weekday_int = datetime.now().date().weekday()
             if day_int == current_weekday_int:
-                if hours > datetime.now().hour or (hours == datetime.now().hour and minutes <= datetime.now().minute):
+                if hours < datetime.now().hour or (hours == datetime.now().hour and minutes <= datetime.now().minute):
                     days_offset = 7
             else:
                 days_offset = (day_int - current_weekday_int) % 7
