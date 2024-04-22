@@ -250,18 +250,6 @@ def view_events():
     delay = input("Press enter to return to the main menu")
 
 
-
-    # choices = ["View Past Events", "View Today's Events", "View Tomorrow's Events", "View This Week's Events",
-    #            "View Next Week's Events", "View This Month's Events", "View Next Month's Events",
-    #            "View Next 10 Events", "View Next X Events", "View All Events"]
-    # choice = generic_menu(choices)
-    # match choice:
-    #     case "0":
-    #         code = None
-    # for event in events:
-    #     print(event_text(event))
-
-
 def start_dt(event):
     return event["Start DateTime"]
 
