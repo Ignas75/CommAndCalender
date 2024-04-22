@@ -1,4 +1,4 @@
-from events import process_event
+from events import *
 import os
 from datetime import datetime
 from icalendar import Calendar, Event
@@ -47,7 +47,7 @@ def delete_past_events():
 
     prompt = "\nAre you sure you want to delete all of the above?"
     options = ["yes", "y", "no", "n"]
-    choice = generic_menu(prompt, options)
+    choice = get_user_choice(prompt, options)
     if choice in ["yes", "y"]:
         # deleting from the end to keep the process "clean" and not delete other events accidentally
         events_to_delete_indices.reverse()
@@ -83,7 +83,7 @@ def has_upcoming_event():
     return False
 
 
-def generic_menu(prompt, options):
+def get_user_choice(prompt, options):
     valid_input = False
     choice = None
     prompt_with_options_text = prompt + "\nPlease enter one of (" + ",".join(options) + "): "
@@ -97,18 +97,43 @@ def generic_menu(prompt, options):
     return choice
 
 
+def generic_menu(menu_items, help_text=None):
+    valid_choice = False
+    user_choice = None
+    while not valid_choice:
+        for i in range(0, len(menu_items)):
+            print(str(i) + ": " + menu_items[i])
+
+        if help_text:
+            print("\nh: " + help_text)
+
+        print("e: exit")
+        user_choice = input("Please enter your choice here")
+        if user_choice.isdigit():
+            int_choice = int(user_choice)
+            if 0 <= int_choice < len(menu_items):
+                valid_choice = True
+            elif help_text and user_choice == "h":
+                print(help_text)
+        elif user_choice == "e":
+            valid_choice = True
+        else:
+            print("You entered: '" + user_choice + "', please try again")
+    return user_choice
+
+
 def save_calendar(name):
     ignore_past_events = True
     if has_passed_event():
         prompt = "\nDo you want to export past events?"
         options = ["y", "yes", "no", "n"]
-        choice = generic_menu(prompt, options)
+        choice = get_user_choice(prompt, options)
         confirmations = ["y", "yes"]
         if choice in confirmations:
             ignore_past_events = False
         else:
             prompt = "\nDo you want to keep these past events?"
-            choice = generic_menu(prompt, options)
+            choice = get_user_choice(prompt, options)
             if choice not in confirmations:
                 delete_past_events()
 
@@ -147,18 +172,102 @@ def load_events():
             values = line.split(",")
             event["Name"] = values[0]
             event["Start DateTime"] = datetime.strptime(values[1], datetime_display_format)
-            # removing the end space and or newline character to make this work? (don't fully get it)1
+            # removing the end space and or newline character to make this work? (don't fully get it)
             event["End DateTime"] = datetime.strptime(values[2].strip(), datetime_display_format)
             events.append(event)
         file.close()
 
 
+def indexes_of_list_elem_matching_criteria(event_list, criteria):
+    indexes = []
+    for i in range(0, len(event_list)):
+        if criteria(event_list[i]):
+            indexes.append(i)
+    return indexes
+
+
+def print_events_by_index(indexes, event_list):
+    for i in indexes:
+        print(event_text(event_list[i]) + "\n")
+
+
 def view_events():
-    if len(events) == 0:
+    event_count = len(events)
+    if event_count == 0:
         print("There are no events to show\n")
-    else:
+        return 0
+    elif event_count <= 5:
         for event in events:
             print(event_text(event))
+        return 1
+    today_events_indexes = indexes_of_list_elem_matching_criteria(events, is_today)
+    tomorrow_events_indexes = indexes_of_list_elem_matching_criteria(events, is_tomorrow)
+    this_weeks_events_indexes = indexes_of_list_elem_matching_criteria(events, is_this_week)
+    next_weeks_events_indexes = indexes_of_list_elem_matching_criteria(events, is_next_week)
+    this_months_events_indexes = indexes_of_list_elem_matching_criteria(events, is_this_month)
+    next_months_events_indexes = indexes_of_list_elem_matching_criteria(events, is_next_month)
+    show_help = True
+    valid_choice = False
+    while not valid_choice:
+        if show_help:
+            print(f"You have ({event_count}) events stored, you can either view them all or apply one of these filters")
+            print(f"\ntd: Today({len(today_events_indexes)})   nd: Tomorrow({len(tomorrow_events_indexes)})")
+            print(f"tw: This Week({len(this_weeks_events_indexes)})   nw: Next Week({len(next_weeks_events_indexes)})")
+            print(f"tm: This Month({len(this_months_events_indexes)})   nm: Next Month({len(next_months_events_indexes)})")
+            print("\nOr only press enter to view all")
+            show_help = False
+
+        choice = input("\nPlease enter your choice: ").lower()
+        match choice:
+            case "td":
+                print_events_by_index(today_events_indexes, events)
+                valid_choice = True
+            case "nd":
+                print_events_by_index(tomorrow_events_indexes, events)
+                valid_choice = True
+            case "tw":
+                print_events_by_index(this_weeks_events_indexes, events)
+                valid_choice = True
+            case "nw":
+                print_events_by_index(next_weeks_events_indexes, events)
+                valid_choice = True
+            case "tm":
+                print_events_by_index(this_months_events_indexes, events)
+                valid_choice = True
+            case "nm":
+                print_events_by_index(next_months_events_indexes, events)
+                valid_choice = True
+            case "h":
+                show_help = True
+            case "e":
+                valid_choice = True
+            case "":
+                for event in events:
+                    print(event_text(event))
+                valid_choice = True
+            case _:
+                print(f"You entered '{choice}', you can enter 'h' to repeat the help text, or 'e' to return to the menu")
+    delay = input("Press enter to return to the main menu")
+
+
+
+    # choices = ["View Past Events", "View Today's Events", "View Tomorrow's Events", "View This Week's Events",
+    #            "View Next Week's Events", "View This Month's Events", "View Next Month's Events",
+    #            "View Next 10 Events", "View Next X Events", "View All Events"]
+    # choice = generic_menu(choices)
+    # match choice:
+    #     case "0":
+    #         code = None
+    # for event in events:
+    #     print(event_text(event))
+
+
+def start_dt(event):
+    return event["Start DateTime"]
+
+
+def order_events_by_start_date():
+    events.sort(key=start_dt)
 
 
 def add_event_menu():
@@ -177,6 +286,7 @@ def add_event_menu():
                 print("There is a mistake in the event details:\n" + event["Error"])
             else:
                 events.append(event)
+    order_events_by_start_date()
     save_events()
 
 
